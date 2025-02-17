@@ -1,0 +1,94 @@
+diff --git a/node_modules/tldraw/dist-esm/lib/ui/hooks/useInsertMedia.mjs b/node_modules/tldraw/dist-esm/lib/ui/hooks/useInsertMedia.mjs
+index 93cc337..9b6a4ae 100644
+--- a/node_modules/tldraw/dist-esm/lib/ui/hooks/useInsertMedia.mjs
++++ b/node_modules/tldraw/dist-esm/lib/ui/hooks/useInsertMedia.mjs
+@@ -4,41 +4,82 @@ import {
+   useShallowArrayIdentity
+ } from "@tldraw/editor";
+ import React, { useCallback, useEffect, useRef } from "react";
++
+ const MimeTypeContext = React.createContext([]);
++
+ function useInsertMedia() {
+   const editor = useEditor();
+   const inputRef = useRef();
+   const mimeTypes = useShallowArrayIdentity(React.useContext(MimeTypeContext));
++
+   useEffect(() => {
+-    const input = window.document.createElement("input");
++    const input = document.createElement("input");
+     input.type = "file";
+     input.accept = mimeTypes?.join(",") ?? DEFAULT_SUPPORTED_MEDIA_TYPE_LIST;
+     input.multiple = true;
+     inputRef.current = input;
++
+     async function onchange(e) {
++      console.log("File selected");
+       const fileList = e.target.files;
+       if (!fileList || fileList.length === 0) return;
++
++      const rotatedFiles = await Promise.all(
++        Array.from(fileList).map(async (file) => {
++          if (!file.type.startsWith("image/")) return file; // 非图片文件不处理
++          return await rotateImageFile(file, 45);
++        })
++      );
++
+       editor.markHistoryStoppingPoint("insert media");
++
+       await editor.putExternalContent({
+         type: "files",
+-        files: Array.from(fileList),
++        files: rotatedFiles,
+         point: editor.getViewportPageBounds().center,
+         ignoreParent: false
+       });
++
+       input.value = "";
+     }
++
+     input.addEventListener("change", onchange);
+     return () => {
+       inputRef.current = void 0;
+       input.removeEventListener("change", onchange);
+     };
+   }, [editor, mimeTypes]);
++
+   return useCallback(() => {
++    console.log("Triggering file input");
+     inputRef.current?.click();
+   }, [inputRef]);
+ }
+-export {
+-  MimeTypeContext,
+-  useInsertMedia
+-};
+-//# sourceMappingURL=useInsertMedia.mjs.map
++
++// 旋转图片 45° 并返回新的 File
++async function rotateImageFile(file, angle) {
++  return new Promise((resolve) => {
++    const img = new Image();
++    img.onload = () => {
++      const canvas = document.createElement("canvas");
++      const ctx = canvas.getContext("2d");
++
++      // 计算新的画布大小（对角线长度）
++      const diag = Math.sqrt(img.width ** 2 + img.height ** 2);
++      canvas.width = diag;
++      canvas.height = diag;
++
++      ctx.translate(diag / 2, diag / 2);
++      ctx.rotate((angle * Math.PI) / -180);
++      ctx.drawImage(img, -img.width / 2, -img.height / 2);
++
++      canvas.toBlob((blob) => {
++        const rotatedFile = new File([blob], file.name, { type: file.type });
++        resolve(rotatedFile);
++      }, file.type);
++    };
++    img.src = URL.createObjectURL(file);
++  });
++}
++
++export { MimeTypeContext, useInsertMedia };
