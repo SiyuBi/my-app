@@ -1,8 +1,8 @@
 diff --git a/node_modules/tldraw/dist-esm/lib/ui/hooks/useInsertMedia.mjs b/node_modules/tldraw/dist-esm/lib/ui/hooks/useInsertMedia.mjs
-index 93cc337..9b6a4ae 100644
+index 93cc337..c29bc5f 100644
 --- a/node_modules/tldraw/dist-esm/lib/ui/hooks/useInsertMedia.mjs
 +++ b/node_modules/tldraw/dist-esm/lib/ui/hooks/useInsertMedia.mjs
-@@ -4,41 +4,82 @@ import {
+@@ -4,41 +4,80 @@ import {
    useShallowArrayIdentity
  } from "@tldraw/editor";
  import React, { useCallback, useEffect, useRef } from "react";
@@ -23,7 +23,6 @@ index 93cc337..9b6a4ae 100644
      inputRef.current = input;
 +
      async function onchange(e) {
-+      console.log("File selected");
        const fileList = e.target.files;
        if (!fileList || fileList.length === 0) return;
 +
@@ -55,7 +54,6 @@ index 93cc337..9b6a4ae 100644
    }, [editor, mimeTypes]);
 +
    return useCallback(() => {
-+    console.log("Triggering file input");
      inputRef.current?.click();
    }, [inputRef]);
  }

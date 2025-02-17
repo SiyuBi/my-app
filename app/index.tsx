@@ -12,11 +12,6 @@ export default function HomeScreen() {
 
   useEffect(() => {
     setIsMounted(true);
-	if (!editor) {
-		console.warn("TldrawEditor 未初始化，尝试重新赋值...");
-	  } else {
-		console.log("TldrawEditor 初始化成功", editor);
-	  }
   }, [editor]);
 
   return (
